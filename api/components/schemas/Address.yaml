@@ -1,0 +1,21 @@
+Address:
+  type: object
+  properties:
+    street:
+      type: string
+      example: 1 Infinite Loop
+    city:
+      type: string
+      example: Cupertino
+    country:
+      type: string
+      example: US
+  required:
+    - street
+    - city
+    - country
+  additionalProperties: false
+  example:
+    street: 1 Infinite Loop
+    city: Cupertino
+    country: US

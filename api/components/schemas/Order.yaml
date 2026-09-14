@@ -1,0 +1,54 @@
+Order:
+  type: object
+  properties:
+    id:
+      type: string
+      format: uuid
+      example: string
+    user:
+      $ref: "#/components/schemas/User"
+    shippingAddress:
+      $ref: "#/components/schemas/Address"
+      nullable: true
+      example:
+        street: 1 Infinite Loop
+        city: Cupertino
+        country: US
+    items:
+      type: array
+      items:
+        $ref: "#/components/schemas/Item"
+      example:
+        - sku: SKU-001
+          name: Widget
+          qty: 1
+    total:
+      type: integer
+      minimum: 0
+      example: 0
+  required:
+    - id
+    - user
+    - shippingAddress
+    - items
+    - total
+  additionalProperties: false
+  example:
+    id: string
+    user:
+      id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+      email: ada@example.com
+      name: Ada Lovelace
+      address:
+        street: 1 Infinite Loop
+        city: Cupertino
+        country: US
+    shippingAddress:
+      street: 1 Infinite Loop
+      city: Cupertino
+      country: US
+    items:
+      - sku: SKU-001
+        name: Widget
+        qty: 1
+    total: 0

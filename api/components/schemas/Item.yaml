@@ -1,0 +1,22 @@
+Item:
+  type: object
+  properties:
+    sku:
+      type: string
+      example: SKU-001
+    name:
+      type: string
+      example: Widget
+    qty:
+      type: integer
+      minimum: 1
+      example: 1
+  required:
+    - sku
+    - name
+    - qty
+  additionalProperties: false
+  example:
+    sku: SKU-001
+    name: Widget
+    qty: 1
