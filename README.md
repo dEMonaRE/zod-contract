@@ -1,6 +1,6 @@
 # zod-contract
 
-Zod schemas → OpenAPI 3.1 components + JSON examples. Zero wrapping, zero config.
+Zod schemas → OpenAPI 3.x components (default 3.2) + JSON examples. Zero wrapping, zero config.
 
 ```ts
 import { z } from 'zod'
@@ -123,7 +123,7 @@ rapid bursts (e.g. editor save chains). Ctrl-C to stop.
 
 Unknown types emit `{}` rather than failing.
 
-## Plugin extension surface (v1 ships none)
+## Plugin extension surface
 
 ```ts
 import type { Plugin } from '@aemrezorlu/zod-contract'
@@ -142,10 +142,10 @@ const myPlugin: Plugin = {
 }
 ```
 
-Future plugins (planned, not shipped in v1):
-- `zod-contract-paths` — derive `paths/` from annotated schema files
-- `zod-contract-hono` — typed Hono client/server adapter
-- `zod-contract-trpc` — tRPC router adapter
+Shipped plugins:
+- [`@aemrezorlu/zod-contract-paths`](https://www.npmjs.com/package/@aemrezorlu/zod-contract-paths) — file-based routing → OpenAPI `paths.yaml`
+- [`@aemrezorlu/zod-contract-hono`](https://www.npmjs.com/package/@aemrezorlu/zod-contract-hono) — Hono `app.routes` → OpenAPI `paths.yaml`
+- [`@aemrezorlu/zod-contract-trpc`](https://www.npmjs.com/package/@aemrezorlu/zod-contract-trpc) — tRPC `appRouter` → OpenAPI `paths.yaml`
 
 ## Programmatic API
 

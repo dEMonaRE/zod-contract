@@ -37,7 +37,7 @@ export interface SchemaInfo {
  */
 export interface Plugin {
   name: string
-  /** Called once per schema after conversion to OpenAPI 3.1. */
+  /** Called once per schema after conversion to OpenAPI 3.x. */
   transformSchema?(schema: OpenAPISchema, info: SchemaInfo): OpenAPISchema | Promise<OpenAPISchema>
   /** Called once after all schemas are emitted. Mutate `outputs` to add files. */
   finalize?(ctx: BuildContext): BuildContext | Promise<BuildContext>

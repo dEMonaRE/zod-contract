@@ -1,4 +1,4 @@
-// Zod → OpenAPI 3.1 (JSON Schema 2020-12 compatible) converter.
+// Zod → OpenAPI 3.x (JSON Schema 2020-12 compatible) converter.
 // Registry-aware: when a sub-schema matches a top-level Zod instance,
 // emits `#/components/schemas/<Name>` instead of inlining.
 

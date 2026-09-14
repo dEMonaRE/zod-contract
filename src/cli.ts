@@ -6,7 +6,7 @@ import { build } from './render.js'
 const program = new Command()
 program
   .name('zod-contract')
-  .description('Zod schemas → OpenAPI 3.1 components + JSON examples. Zero wrapping, zero config.')
+  .description('Zod schemas → OpenAPI 3.x components + JSON examples. Zero wrapping, zero config.')
   .version('0.1.0')
 
 program

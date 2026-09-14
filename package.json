@@ -1,7 +1,7 @@
 {
   "name": "@aemrezorlu/zod-contract",
-  "version": "0.2.0",
-  "description": "Zod schemas → OpenAPI 3.1 components + JSON examples. Zero wrapping, zero config.",
+  "version": "0.2.1",
+  "description": "Zod schemas → OpenAPI 3.x components (default 3.2) + JSON examples. Zero wrapping, zero config.",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -18,6 +18,24 @@
   "engines": {
     "node": ">=20"
   },
+  "keywords": [
+    "zod",
+    "openapi",
+    "openapi-3",
+    "json-schema",
+    "typescript",
+    "cli",
+    "schema",
+    "swagger"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dEMonaRE/zod-contract.git"
+  },
+  "bugs": {
+    "url": "https://github.com/dEMonaRE/zod-contract/issues"
+  },
+  "homepage": "https://github.com/dEMonaRE/zod-contract#readme",
   "files": [
     "dist",
     "README.md",
@@ -31,7 +49,7 @@
     "build": "tsc -p tsconfig.build.json && chmod +x dist/cli.js",
     "test": "vitest run",
     "demo": "tsx src/cli.ts build fixtures api",
-    "prepublishOnly": "pnpm build && pnpm test"
+    "prepublishOnly": "npm run build && npm test"
   },
   "peerDependencies": {
     "zod": "^3.23.0"
