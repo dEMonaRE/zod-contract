@@ -25,6 +25,9 @@ export function extractExample(schema: ZodTypeAny): unknown {
     case 'ZodOptional':
     case 'ZodNullable':
       return extractExample(def.innerType as ZodTypeAny)
+    case 'ZodLazy':
+      // Don't peek through lazy — emitting an example for a cycled target yields null example field on $ref.
+      return undefined
     case 'ZodDefault': {
       try {
         return (def.defaultValue as () => unknown)()

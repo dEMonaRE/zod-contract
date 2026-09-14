@@ -60,8 +60,14 @@ Wrappers carry the marker through:
 - `z.array(Schema)` → `type: array` with `items: { $ref }`
 - `z.union([A, B])` → `oneOf` with `$ref`s for registered members
 
-**Bidirectional refs** (User→Address and Address→User in the same file) require `z.lazy()`,
-which the current skeleton does not handle. Declare in one direction or split into multiple files.
+**Bidirectional refs** (User→Address and Address→User in the same file) work via `z.lazy()` on at least one side:
+
+```ts
+export const Address = z.object({ city: z.string(), occupant: z.lazy(() => User) })
+export const User    = z.object({ name: z.string(), home: Address })
+```
+
+Both sides emit `$ref`; the `walking` set in `convert()` handles the cycle.
 
 ## Example values
 

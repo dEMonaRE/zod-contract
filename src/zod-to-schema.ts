@@ -127,6 +127,17 @@ function convert(
       break
     }
 
+    case 'ZodLazy': {
+      // Resolve the lazy target; if it's a registered schema, emit $ref.
+      // Otherwise inline-recurse (uses walking set for cycle guard).
+      const getter = (def as { getter?: () => ZodTypeAny }).getter
+      const inner = typeof getter === 'function' ? getter() : (schema as ZodTypeAny)
+      walking.delete(schema)
+      out = convert(inner, registry, exempt, walking)
+      walking.add(schema)
+      break
+    }
+
     case 'ZodOptional':
       out = convert(def.innerType as ZodTypeAny, registry, exempt, walking)
       break

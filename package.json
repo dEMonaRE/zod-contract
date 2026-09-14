@@ -1,6 +1,6 @@
 {
   "name": "@aemrezorlu/zod-contract",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Zod schemas → OpenAPI 3.x components (default 3.2) + JSON examples. Zero wrapping, zero config.",
   "type": "module",
   "main": "./dist/index.js",
