@@ -16,12 +16,16 @@ program
   .argument('<out>', 'Output directory')
   .option('-f, --format <format>', 'Output format for schemas (yaml|json)', 'yaml')
   .option('-v, --openapi-version <ver>', 'OpenAPI version (3.1.0|3.2.0)', '3.2.0')
-  .action(async (src: string, out: string, opts: { format: string; openapiVersion: string }) => {
+  .option('-e, --exclude <patterns...>', 'Glob patterns to exclude (repeatable)', [])
+  .option('-c, --on-collision <mode>', 'Schema name collision mode (error|merge|first-wins)', 'first-wins')
+  .action(async (src: string, out: string, opts: { format: string; openapiVersion: string; exclude: string[]; onCollision: string }) => {
     const ctx = await build({
       src,
       out,
       format: opts.format as 'yaml' | 'json',
       openapiVersion: opts.openapiVersion as '3.1.0' | '3.2.0',
+      exclude: opts.exclude,
+      onCollision: opts.onCollision as 'error' | 'merge' | 'first-wins',
     })
     const count = ctx.schemas.length
     const files = ctx.outputs.size
@@ -36,14 +40,18 @@ program
   .option('-f, --format <format>', 'Output format for schemas (yaml|json)', 'yaml')
   .option('-v, --openapi-version <ver>', 'OpenAPI version (3.1.0|3.2.0)', '3.2.0')
   .option('-d, --debounce <ms>', 'Rebuild debounce in ms', '200')
-  .action(async (src: string, out: string, opts: { format: string; openapiVersion: string; debounce: string }) => {
+  .option('-e, --exclude <patterns...>', 'Glob patterns to exclude (repeatable)', [])
+  .option('-c, --on-collision <mode>', 'Schema name collision mode (error|merge|first-wins)', 'first-wins')
+  .action(async (src: string, out: string, opts: { format: string; openapiVersion: string; debounce: string; exclude: string[]; onCollision: string }) => {
     const format = opts.format as 'yaml' | 'json'
     const openapiVersion = opts.openapiVersion as '3.1.0' | '3.2.0'
     const debounceMs = parseInt(opts.debounce, 10)
+    const exclude = opts.exclude
+    const onCollision = opts.onCollision as 'error' | 'merge' | 'first-wins'
 
     // Initial build
     try {
-      const ctx = await build({ src, out, format, openapiVersion })
+      const ctx = await build({ src, out, format, openapiVersion, exclude, onCollision })
       process.stdout.write(`✓ initial: ${ctx.schemas.length} schemas → ${ctx.outputs.size} files in ${out}\n`)
     } catch (e) {
       process.stderr.write(`✗ initial build failed: ${(e as Error).message}\n`)
@@ -65,7 +73,7 @@ program
         building = true
         const t0 = Date.now()
         try {
-          const ctx = await build({ src, out, format })
+          const ctx = await build({ src, out, format, exclude, onCollision })
           const ms = Date.now() - t0
           process.stdout.write(
             `[${new Date().toLocaleTimeString()}] ${event} ${filePath} → ${ctx.schemas.length} schemas (${ms}ms)\n`,

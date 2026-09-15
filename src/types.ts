@@ -48,4 +48,6 @@ export interface BuildContext {
   /** path → file contents (relative to out dir) */
   outputs: Map<string, string>
   format: 'yaml' | 'json'
+  /** OpenAPI version target (default '3.2.0'). Plugins may branch on this. */
+  openapiVersion: '3.1.0' | '3.2.0'
 }

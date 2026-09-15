@@ -17,13 +17,17 @@ export interface BuildOptions {
   format?: 'yaml' | 'json'
   /** OpenAPI version string on the index file. Default '3.2.0'. */
   openapiVersion?: '3.1.0' | '3.2.0'
+  /** Glob patterns to exclude when scanning (forwarded to scanner). */
+  exclude?: string[]
+  /** Behavior on schema name collision. Default: 'error'. */
+  onCollision?: 'error' | 'merge' | 'first-wins'
 }
 
 export async function build(opts: BuildOptions): Promise<BuildContext> {
   const format = opts.format ?? 'yaml'
   const ext = format === 'json' ? 'json' : 'yaml'
 
-  const schemas = await scanSchemas(opts.src)
+  const schemas = await scanSchemas(opts.src, { exclude: opts.exclude, onCollision: opts.onCollision })
 
   // Build cross-schema $ref registry: each scanned schema → its export name.
   const registry = new Map<ZodTypeAny, string>()
@@ -72,7 +76,7 @@ export async function build(opts: BuildOptions): Promise<BuildContext> {
     format === 'json' ? JSON.stringify(indexPayload, null, 2) + '\n' : yaml(indexPayload),
   )
 
-  let ctx: BuildContext = { schemas, outputs, format }
+  let ctx: BuildContext = { schemas, outputs, format, openapiVersion: opts.openapiVersion ?? '3.2.0' }
   for (const p of opts.plugins ?? []) {
     if (p.finalize) ctx = await p.finalize(ctx)
   }
