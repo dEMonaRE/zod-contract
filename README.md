@@ -97,17 +97,26 @@ Peer dep: `zod` ^3.23.
 
 ```bash
 zod-contract build <src> <out>
-zod-contract build <src> <out> --format json
+zod-contract build <src> <out> --format json --openapi-version 3.2.0
+zod-contract build <src> <out> --exclude '**/internal/**' --on-collision merge
 ```
 
 - `<src>` — a `.ts` file or a directory (walks recursively, skips `*.test.ts` and `*.d.ts`)
 - `<out>` — output directory (created if missing)
 - `--format yaml|json` — schema + index file format; examples are always JSON
+- `--openapi-version 3.1.0|3.2.0` — emitted index targets (default `3.2.0`)
+- `--exclude <patterns...>` — repeatable glob(s) to skip files under `<src>`.
+  Supports `**`, `*`, `?`. Example: `--exclude '**/internal/**' '**/*.draft.ts'`
+- `--on-collision error|merge|first-wins` — what to do when two exports share a name
+  - `first-wins` (default) — keep the first occurrence, stderr note
+  - `error` — throw
+  - `merge` — combine ZodObject shapes via `Zod.merge()` (last-wins per key);
+    non-ZodObject collisions throw with a clear pointer to rename
 
 Output:
-- `components/schemas/<Name>.{yaml,json}` — one OpenAPI 3.1 schema per export
+- `components/schemas/<Name>.{yaml,json}` — one OpenAPI 3.x schema per export
 - `examples/<name>.json` — JSON example extracted from `.example()` / `.default()` / heuristic
-- `index.{yaml,json}` — OpenAPI 3.1 root that $refs all schemas
+- `index.{yaml,json}` — OpenAPI 3.x root that $refs all schemas
 
 ### `watch`
 
@@ -118,6 +127,23 @@ zod-contract watch <src> <out> --format json --debounce 200
 
 Initial build, then incremental rebuilds on any source change. Debounce collapses
 rapid bursts (e.g. editor save chains). Ctrl-C to stop.
+
+### `init`
+
+```bash
+zod-contract init [dir]
+zod-contract init . --with-package-scripts
+```
+
+Scaffolds a starter project (idempotent — skips files that already exist):
+
+- `src/schemas/User.ts` — a sample Zod schema with `id`/`email`/`name`/`role`
+- With `--with-package-scripts`: adds `zod-contract:build` and
+  `zod-contract:watch` scripts to your `package.json` (only if absent —
+  never overwrites user-defined values)
+
+No `package.json` is required for the basic form; the flag is a no-op
+when one is missing.
 
 ## Supported Zod types
 
@@ -151,7 +177,8 @@ const myPlugin: Plugin = {
 Shipped plugins:
 - [`@aemrezorlu/zod-contract-paths`](https://www.npmjs.com/package/@aemrezorlu/zod-contract-paths) — file-based routing → OpenAPI `paths.yaml`
 - [`@aemrezorlu/zod-contract-hono`](https://www.npmjs.com/package/@aemrezorlu/zod-contract-hono) — Hono `app.routes` → OpenAPI `paths.yaml`
-- [`@aemrezorlu/zod-contract-trpc`](https://www.npmjs.com/package/@aemrezorlu/zod-contract-trpc) — tRPC `appRouter` → OpenAPI `paths.yaml`
+- [`@aemrezorlu/zod-contract-trpc`](https://www.npmjs.com/package/@aemrezorlu/zod-contract-trpc) — tRPC `appRouter` → OpenAPI `paths.yaml` (subscriptions → `webhooks:` on 3.2)
+- [`@aemrezorlu/zod-contract-auth`](https://www.npmjs.com/package/@aemrezorlu/zod-contract-auth) — `components/securitySchemes` + per-operation `security:` (Bearer / apiKey / Basic)
 
 ## Programmatic API
 
