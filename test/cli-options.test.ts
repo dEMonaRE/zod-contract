@@ -44,4 +44,28 @@ describe('Tier 1 #4 + #5: --exclude and collision modes', () => {
     })
     expect(schemas.map((s) => s.name)).not.toContain('Item')
   })
+
+  it('onCollision=merge combines ZodObject shapes (last-wins per key)', async () => {
+    const schemas = await scanSchemas(path.resolve('fixtures'), { onCollision: 'merge' })
+    const user = schemas.find((s) => s.name === 'User')
+    expect(user).toBeDefined()
+    // Merged schema is still a ZodObject (union of keys from all 3 files).
+    expect((user!.zod._def as { typeName?: string }).typeName).toBe('ZodObject')
+    const shape = (user!.zod._def as { shape: () => Record<string, unknown> }).shape()
+    // Union of every key from bidirectional, user-order, and user fixtures.
+    expect(Object.keys(shape).sort()).toEqual(
+      ['address', 'createdAt', 'email', 'home', 'id', 'name', 'role'].sort(),
+    )
+    // Sanity: only the leaf fields (skip the recursive home chain).
+    const parsed = (user!.zod as unknown as { partial: () => { parse: (o: unknown) => unknown } })
+      .partial()
+      .parse({
+        id: '9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d',
+        email: 'a@b.co',
+        name: 'Ada',
+        role: 'admin',
+        createdAt: '2026-01-15T08:30:00Z',
+      })
+    expect((parsed as { email: string }).email).toBe('a@b.co')
+  })
 })

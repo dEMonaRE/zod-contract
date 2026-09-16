@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 import { Command } from 'commander'
 import chokidar from 'chokidar'
+import * as fs from 'node:fs/promises'
+import * as path from 'node:path'
 import { build } from './render.js'
 
 const program = new Command()
@@ -96,5 +98,76 @@ program
     process.on('SIGINT', shutdown)
     process.on('SIGTERM', shutdown)
   })
+
+program
+  .command('init')
+  .description('Scaffold a starter Zod schema file (idempotent — skips files that exist)')
+  .argument('[dir]', 'Project directory to scaffold into', '.')
+  .option('--with-package-scripts', 'Add zod-contract build/watch scripts to package.json', false)
+  .action(async (dir: string, opts: { withPackageScripts: boolean }) => {
+    const root = path.resolve(dir)
+    const schemasDir = path.join(root, 'src', 'schemas')
+    await fs.mkdir(schemasDir, { recursive: true })
+
+    const sampleFile = path.join(schemasDir, 'User.ts')
+    const sampleWritten = await writeIfMissing(
+      sampleFile,
+      `import { z } from 'zod'
+
+export const User = z.object({
+  id: z.string().uuid(),
+  email: z.string().email(),
+  name: z.string().min(1).max(120),
+  role: z.enum(['admin', 'member', 'guest']).default('member'),
+})
+`,
+    )
+
+    let pkgTouched = false
+    if (opts.withPackageScripts) {
+      const pkgPath = path.join(root, 'package.json')
+      try {
+        const raw = await fs.readFile(pkgPath, 'utf8')
+        const pkg = JSON.parse(raw) as { scripts?: Record<string, string> }
+        pkg.scripts = pkg.scripts ?? {}
+        if (!pkg.scripts['zod-contract:build']) {
+          pkg.scripts['zod-contract:build'] = 'zod-contract build src/schemas api'
+          pkgTouched = true
+        }
+        if (!pkg.scripts['zod-contract:watch']) {
+          pkg.scripts['zod-contract:watch'] = 'zod-contract watch src/schemas api'
+          pkgTouched = true
+        }
+        if (pkgTouched) await fs.writeFile(pkgPath, JSON.stringify(pkg, null, 2) + '\n')
+      } catch {
+        // no package.json — skip silently
+      }
+    }
+
+    process.stdout.write(
+      [
+        sampleWritten
+          ? `+ created ${path.relative(root, sampleFile)}`
+          : `= ${path.relative(root, sampleFile)} already exists, skipped`,
+        pkgTouched ? '+ updated package.json scripts (zod-contract:build, zod-contract:watch)' : null,
+        '',
+        'Next:',
+        '  npx zod-contract build src/schemas api   # emit api/components/schemas.yaml + examples',
+        '',
+      ]
+        .filter(Boolean)
+        .join('\n'),
+    )
+  })
+
+async function writeIfMissing(filePath: string, content: string): Promise<boolean> {
+  try {
+    await fs.access(filePath)
+    return false
+  } catch {
+    await fs.writeFile(filePath, content)
+    return true
+  }
+}
 
 await program.parseAsync()

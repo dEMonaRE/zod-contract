@@ -49,7 +49,19 @@ export async function scanSchemas(src: string, opts: ScanOptions = {}): Promise<
             `Rename one, or pass onCollision: 'first-wins' (or 'merge').`,
         )
       }
-      // 'first-wins' and 'merge' — keep first, log the loser
+      if (onCollision === 'merge') {
+        const merged = tryMerge(existing.zod, value, name, existing.file, file)
+        if (!merged.ok) throw new Error(merged.error)
+        const updated: SchemaInfo = { name, zod: merged.schema, file: existing.file }
+        nameIndex.set(name, updated)
+        const idx = out.indexOf(existing)
+        if (idx >= 0) out[idx] = updated
+        process.stderr.write(
+          `zod-contract: merged '${name}' from ${existing.file} + ${file} (object keys union).\n`,
+        )
+        continue
+      }
+      // 'first-wins' — keep first, log the loser
       process.stderr.write(
         `zod-contract: schema name collision for '${name}' (${existing.file} vs ${file}); keeping first.\n`,
       )
@@ -108,4 +120,29 @@ function isZodSchema(v: unknown): v is ZodTypeAny {
   if (typeof def !== 'object' || def === null) return false
   const typeName = (def as { typeName?: unknown }).typeName
   return typeof typeName === 'string' && typeName.startsWith('Zod')
+}
+
+// ponytail: only ZodObject supports deep-merge in v0.4. For other types, surface a clear
+// error pointing the user at rename or a different onCollision mode. Zod's `.merge()` is
+// last-wins per key, matches convention for "extensions".
+function tryMerge(
+  a: ZodTypeAny,
+  b: ZodTypeAny,
+  name: string,
+  fileA: string,
+  fileB: string,
+): { ok: true; schema: ZodTypeAny } | { ok: false; error: string } {
+  const tA = (a._def as { typeName?: string }).typeName
+  const tB = (b._def as { typeName?: string }).typeName
+  if (tA !== 'ZodObject' || tB !== 'ZodObject') {
+    return {
+      ok: false,
+      error:
+        `zod-contract: cannot merge '${name}' — only ZodObject schemas are mergeable. ` +
+        `Got ${tA} (${fileA}) vs ${tB} (${fileB}). ` +
+        `Rename one, or pass onCollision: 'first-wins'|'error'.`,
+    }
+  }
+  const merged = (a as unknown as { merge: (other: ZodTypeAny) => ZodTypeAny }).merge(b)
+  return { ok: true, schema: merged }
 }
